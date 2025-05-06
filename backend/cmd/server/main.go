@@ -2,8 +2,9 @@ package main
 
 import (
 	"log"
-	// "github.com/gin-contrib/cors"
+	"github.com/gin-contrib/cors"
 	"FlashQuiz/internal/api/routes"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/sqlite"
@@ -40,6 +41,16 @@ func main() {
 	 // Router Initilization
 	 router := gin.Default()
 
+	 // Config CORS
+	 config := cors.DefaultConfig()
+	 config.AllowOrigins  = []string{
+		"http://localhost:3000",
+		}
+	 config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
+	 config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	 config.AllowCredentials = true
+	 router.Use(cors.New(config))
+
 	 // Set trusted Proxies
 	 router.SetTrustedProxies([]string{"127.0.0.1"})
 
@@ -50,5 +61,9 @@ func main() {
 
 	 routes.SetupRoutes(router, db)
 
-	 router.Run(":8080")
+	 log.Printf("Server starting on port %s", "8080")
+	 if err := router.Run(":8080"); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	 } 
+
 }
