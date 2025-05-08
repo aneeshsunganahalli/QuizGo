@@ -56,13 +56,13 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	// Get cards from the deck
 	var cards []models.FlashCard
 	query := h.db.Where("deck_id = ?", req.DeckID)
-	
+
 	// If card count is specified, limit the number of cards
 	cardCount := req.CardCount
 	if cardCount > 0 {
 		query = query.Order("RANDOM()").Limit(cardCount)
 	}
-	
+
 	if err := query.Find(&cards).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve flashcards"})
 		return
@@ -92,21 +92,18 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	}
 
 	// Create quiz questions for each card
-	quizQuestions := make([]models.QuizQuestion, 0, len(cards))
 	for _, card := range cards {
 		question := models.QuizQuestion{
 			QuizID:       quiz.ID,
 			CardID:       card.ID,
 			QuestionType: "recall", // Default question type
 		}
-		
+
 		if err := tx.Create(&question).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create quiz questions"})
 			return
 		}
-		
-		quizQuestions = append(quizQuestions, question)
 	}
 
 	// Commit transaction
@@ -118,9 +115,9 @@ func (h *QuizHandler) CreateQuiz(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Quiz created successfully",
 		"quiz": gin.H{
-			"id":             quiz.ID,
-			"title":          quiz.Title,
-			"description":    quiz.Description,
+			"id":              quiz.ID,
+			"title":           quiz.Title,
+			"description":     quiz.Description,
 			"total_questions": quiz.TotalQuestions,
 		},
 	})
@@ -256,8 +253,8 @@ func (h *QuizHandler) SubmitQuizAnswer(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":    "Answer submitted successfully",
-		"is_correct": isCorrect,
+		"message":        "Answer submitted successfully",
+		"is_correct":     isCorrect,
 		"correct_answer": question.FlashCard.BackContent,
 	})
 }
@@ -333,8 +330,8 @@ func (h *QuizHandler) CompleteQuiz(c *gin.Context) {
 	// TODO: Could also update card progress here based on quiz results
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":        "Quiz completed successfully",
-		"score":          score,
+		"message":         "Quiz completed successfully",
+		"score":           score,
 		"correct_answers": correctCount,
 		"total_questions": quiz.TotalQuestions,
 	})
