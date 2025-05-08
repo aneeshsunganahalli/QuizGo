@@ -116,3 +116,39 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		},
 	})
 }
+
+func (h *AuthHandler) Login(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var user models.User
+	if err := h.db.Where("username = ?", req.Username).First(&user).Error; err != nil{
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+		return
+	}
+
+	if err := user.CheckPassword(req.Password); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
+		return
+	}
+
+	// Token Generation
+	token, err := generateJWT(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token": token,
+		"user" : gin.H{
+			"id": user.ID,
+			"username": user.Username,
+			"email": user.Email,
+		},
+	})
+}
