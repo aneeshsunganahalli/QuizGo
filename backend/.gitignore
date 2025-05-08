@@ -1,1 +1,6 @@
 .env
+# SQLite database files
+test.db
+*.db
+*.sqlite
+*.sqlite3

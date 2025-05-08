@@ -40,7 +40,7 @@ type JWTClaims struct {
 
 func generateJWT(user models.User) (string, error) {
 
-	secretKey := os.Getenv("JWT_SECRET_KEY")
+	secretKey := os.Getenv("JWT_SECRET")
 	fmt.Println("----JWT secret key", secretKey)
 
 	claims := JWTClaims{
