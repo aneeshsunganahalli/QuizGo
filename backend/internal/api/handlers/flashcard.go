@@ -253,21 +253,21 @@ func (h *CardHandler) DeleteCard(c *gin.Context) {
 
 	// Begin a transaction to delete the card and update the deck's card count
 	tx := h.db.Begin()
-	
+
 	// Delete the card
 	if err := tx.Delete(&card).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete flashcard"})
 		return
 	}
-	
+
 	// Update deck's card count
 	if err := tx.Model(&card.Deck).Update("card_count", card.Deck.CardCount-1).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update deck card count"})
 		return
 	}
-	
+
 	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process changes"})
@@ -281,7 +281,7 @@ func (h *CardHandler) DeleteCard(c *gin.Context) {
 
 // BulkImportRequest -> Struct for bulk importing cards
 type BulkImportRequest struct {
-	DeckID uint                   `json:"deck_id" binding:"required"`
+	DeckID uint                  `json:"deck_id" binding:"required"`
 	Cards  []BulkImportCardEntry `json:"cards" binding:"required"`
 }
 
@@ -355,9 +355,9 @@ func (h *CardHandler) BulkImportCards(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message":      "Cards imported successfully",
-		"imported":     len(importedCards),
-		"cards":        importedCards,
-		"new_count":    newCardCount,
+		"message":   "Cards imported successfully",
+		"imported":  len(importedCards),
+		"cards":     importedCards,
+		"new_count": newCardCount,
 	})
 }
