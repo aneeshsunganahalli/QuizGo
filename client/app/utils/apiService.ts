@@ -1,12 +1,37 @@
-import { authFetch, getAuthToken } from "./authUtils";
+import { getAuthToken } from "./authUtils";
+import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8080';
+
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// Create authenticated axios instance
+const authApi = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// Add interceptor to add auth token to requests
+authApi.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 /**
  * API service for FlashQuiz app
  */
-export const ApiService = {
-  /**
+export const ApiService = {  /**
    * Authentication related API calls
    */
   auth: {
@@ -16,34 +41,20 @@ export const ApiService = {
      * @returns {Promise} Promise with registration response
      */
     register: async (userData: { username: string, email: string, password: string }) => {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      return response.json();
+      const response = await api.post('/auth/register', userData);
+      return response.data;
     },    /**
      * Login user
      * @param {object} credentials - User login credentials
      * @returns {Promise} Promise with login response
      */
-    login: async (credentials: { email: string, password: string }) => {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      // Return the response JSON with the token field
-      return response.json();
+    login: async (credentials: { username: string, password: string }) => {
+      const response = await api.post('/auth/login', credentials);
+      
+      // Return the response data with the token field
+      return response.data;
     },
   },
-
   /**
    * Decks related API calls
    */
@@ -54,8 +65,8 @@ export const ApiService = {
      * @returns {Promise} Promise with decks data
      */
     getAll: async (includePublic = false) => {
-      return authFetch(`${API_BASE_URL}/api/decks?include_public=${includePublic}`)
-        .then(res => res.json());
+      const response = await authApi.get(`/api/decks?include_public=${includePublic}`);
+      return response.data;
     },
 
     /**
@@ -64,8 +75,8 @@ export const ApiService = {
      * @returns {Promise} Promise with deck data
      */
     getById: async (id: number) => {
-      return authFetch(`${API_BASE_URL}/api/decks/${id}`)
-        .then(res => res.json());
+      const response = await authApi.get(`/api/decks/${id}`);
+      return response.data;
     },
 
     /**
@@ -74,10 +85,8 @@ export const ApiService = {
      * @returns {Promise} Promise with created deck data
      */
     create: async (deckData: { title: string, description: string, category: string, isPublic: boolean }) => {
-      return authFetch(`${API_BASE_URL}/api/decks`, {
-        method: 'POST',
-        body: JSON.stringify(deckData),
-      }).then(res => res.json());
+      const response = await authApi.post('/api/decks', deckData);
+      return response.data;
     },
 
     /**
@@ -87,10 +96,8 @@ export const ApiService = {
      * @returns {Promise} Promise with updated deck data
      */
     update: async (id: number, deckData: { title?: string, description?: string, category?: string, isPublic?: boolean }) => {
-      return authFetch(`${API_BASE_URL}/api/decks/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(deckData),
-      }).then(res => res.json());
+      const response = await authApi.put(`/api/decks/${id}`, deckData);
+      return response.data;
     },
 
     /**
@@ -99,12 +106,10 @@ export const ApiService = {
      * @returns {Promise} Promise with deletion response
      */
     delete: async (id: number) => {
-      return authFetch(`${API_BASE_URL}/api/decks/${id}`, {
-        method: 'DELETE',
-      }).then(res => res.json());
+      const response = await authApi.delete(`/api/decks/${id}`);
+      return response.data;
     },
   },
-
   /**
    * Cards related API calls
    */
@@ -115,8 +120,8 @@ export const ApiService = {
      * @returns {Promise} Promise with cards data
      */
     getByDeck: async (deckId: number) => {
-      return authFetch(`${API_BASE_URL}/api/cards/deck/${deckId}`)
-        .then(res => res.json());
+      const response = await authApi.get(`/api/cards/deck/${deckId}`);
+      return response.data;
     },
 
     /**
@@ -131,10 +136,8 @@ export const ApiService = {
       contentType?: string, 
       difficultyLevel?: number 
     }) => {
-      return authFetch(`${API_BASE_URL}/api/cards`, {
-        method: 'POST',
-        body: JSON.stringify(cardData),
-      }).then(res => res.json());
+      const response = await authApi.post('/api/cards', cardData);
+      return response.data;
     },
 
     /**
@@ -149,10 +152,8 @@ export const ApiService = {
       contentType?: string, 
       difficultyLevel?: number 
     }) => {
-      return authFetch(`${API_BASE_URL}/api/cards/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(cardData),
-      }).then(res => res.json());
+      const response = await authApi.put(`/api/cards/${id}`, cardData);
+      return response.data;
     },
 
     /**
@@ -161,12 +162,10 @@ export const ApiService = {
      * @returns {Promise} Promise with deletion response
      */
     delete: async (id: number) => {
-      return authFetch(`${API_BASE_URL}/api/cards/${id}`, {
-        method: 'DELETE',
-      }).then(res => res.json());
+      const response = await authApi.delete(`/api/cards/${id}`);
+      return response.data;
     },
   },
-
   /**
    * Study related API calls
    */
@@ -178,10 +177,8 @@ export const ApiService = {
      * @returns {Promise} Promise with cards data
      */
     getNextCards: async (deckId: number, limit = 20) => {
-      return authFetch(`${API_BASE_URL}/api/study/next-cards`, {
-        method: 'POST',
-        body: JSON.stringify({ deck_id: deckId, limit }),
-      }).then(res => res.json());
+      const response = await authApi.post('/api/study/next-cards', { deck_id: deckId, limit });
+      return response.data;
     },
 
     /**
@@ -194,10 +191,8 @@ export const ApiService = {
       performance: number, // 1-5 scale
       timeSpent?: number 
     }) => {
-      return authFetch(`${API_BASE_URL}/api/study/update-progress`, {
-        method: 'POST',
-        body: JSON.stringify(progressData),
-      }).then(res => res.json());
+      const response = await authApi.post('/api/study/update-progress', progressData);
+      return response.data;
     },
 
     /**
@@ -207,13 +202,13 @@ export const ApiService = {
      */
     getStats: async (deckId?: number) => {
       const url = deckId 
-        ? `${API_BASE_URL}/api/study/stats?deck_id=${deckId}`
-        : `${API_BASE_URL}/api/study/stats`;
+        ? `/api/study/stats?deck_id=${deckId}`
+        : `/api/study/stats`;
         
-      return authFetch(url).then(res => res.json());
+      const response = await authApi.get(url);
+      return response.data;
     },
   },
-
   /**
    * Quiz related API calls
    */
@@ -229,10 +224,8 @@ export const ApiService = {
       description: string,
       cardCount?: number
     }) => {
-      return authFetch(`${API_BASE_URL}/api/quizzes`, {
-        method: 'POST',
-        body: JSON.stringify(quizData),
-      }).then(res => res.json());
+      const response = await authApi.post('/api/quizzes', quizData);
+      return response.data;
     },
 
     /**
@@ -241,8 +234,8 @@ export const ApiService = {
      * @returns {Promise} Promise with quiz data
      */
     getById: async (id: number) => {
-      return authFetch(`${API_BASE_URL}/api/quizzes/${id}`)
-        .then(res => res.json());
+      const response = await authApi.get(`/api/quizzes/${id}`);
+      return response.data;
     },
 
     /**
@@ -250,8 +243,8 @@ export const ApiService = {
      * @returns {Promise} Promise with quizzes data
      */
     getAll: async () => {
-      return authFetch(`${API_BASE_URL}/api/quizzes`)
-        .then(res => res.json());
+      const response = await authApi.get('/api/quizzes');
+      return response.data;
     },
 
     /**
@@ -264,10 +257,8 @@ export const ApiService = {
       answer: string,
       timeSpent?: number
     }) => {
-      return authFetch(`${API_BASE_URL}/api/quizzes/answer`, {
-        method: 'POST',
-        body: JSON.stringify(answerData),
-      }).then(res => res.json());
+      const response = await authApi.post('/api/quizzes/answer', answerData);
+      return response.data;
     },
 
     /**
@@ -276,10 +267,8 @@ export const ApiService = {
      * @returns {Promise} Promise with quiz completion response
      */
     complete: async (quizId: number) => {
-      return authFetch(`${API_BASE_URL}/api/quizzes/complete`, {
-        method: 'POST',
-        body: JSON.stringify({ quiz_id: quizId }),
-      }).then(res => res.json());
+      const response = await authApi.post('/api/quizzes/complete', { quiz_id: quizId });
+      return response.data;
     },
   },
 };

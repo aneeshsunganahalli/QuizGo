@@ -8,7 +8,7 @@ import { ApiService } from '../../utils/apiService';
 const LoginPage = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
   });
   const [error, setError] = useState('');
@@ -21,22 +21,21 @@ const LoginPage = () => {
       [name]: value,
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     // Validate form
-    if (!formData.email || !formData.password) {
+    if (!formData.username || !formData.password) {
       setError('All fields are required');
       return;
     }
 
     try {
       setIsLoading(true);      const data = await ApiService.auth.login({
-        email: formData.email,
+        username: formData.username,
         password: formData.password,
-      });      if (data.error) {
+      });if (data.error) {
         throw new Error(data.error || 'Login failed');
       }
 
@@ -89,19 +88,18 @@ const LoginPage = () => {
               <span className="block sm:inline">{error}</span>
             </div>
           )}
-          
-          <div className="rounded-md shadow-sm -space-y-px">
+            <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email-address" className="sr-only">Email address</label>
+              <label htmlFor="username" className="sr-only">Username</label>
               <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={formData.email}
+                placeholder="Username"
+                value={formData.username}
                 onChange={handleChange}
               />
             </div>

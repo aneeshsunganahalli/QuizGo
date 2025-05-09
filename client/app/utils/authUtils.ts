@@ -66,23 +66,4 @@ export const logout = () => {
   window.location.href = '/login';
 };
 
-/**
- * Authenticated fetch utility that includes the auth token
- * @param {string} url - The URL to fetch
- * @param {object} options - Fetch options
- * @returns {Promise} Fetch promise
- */
-export const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-  const token = getAuthToken();
-  
-  const headers = {
-    ...(options.headers || {}),
-    'Authorization': token ? `Bearer ${token}` : '',
-    'Content-Type': 'application/json',
-  };
-  
-  return fetch(url, {
-    ...options,
-    headers,
-  });
-};
+// Note: We no longer need authFetch since we're using Axios interceptors now
